@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
 from __future__ import division
@@ -6,17 +7,16 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import sys
+import codecs
+sys.stdout = codecs.getwriter('utf8')(sys.stdout)
+sys.stderr = codecs.getwriter('utf8')(sys.stderr)
 import os
 import json
 import re
 
-import codecs
-sys.stdout = codecs.getwriter('utf8')(sys.stdout)
-sys.stderr = codecs.getwriter('utf8')(sys.stderr)
-
-
 LICENSE_DIRS = ['apache', 'ofl']
 META_JSON = 'METADATA.json'
+DESCRIPTION_FILE = 'DESCRIPTION.en_us.html'
 
 def familiesDirsGenerator(sourcesDir):
     for l in LICENSE_DIRS:
@@ -68,13 +68,16 @@ def familySourceFilesGenerator(sourcesDir, familyDir):
                 for i in sourceIndexes:
                     del collection[i]
 
+class NoMetaDataError(Exception):
+    pass
+
 def readMetaData(sourcesDir, familyDir):
     path = os.path.join(sourcesDir, familyDir, META_JSON)
     try:
         with open(path, 'r') as f:
             return json.load(f)
-    except IOError:
-        return None
+    except IOError as e:
+        raise NoMetaDataError('No meta data with error:' + e)
 
 def iterToCell(data, separator='\n'):
     return separator.join(sorted(list(data)))
@@ -89,40 +92,105 @@ not_urls = set([
   , 'v1.1.'
 ])
 
+
+_regex_copyright = re.compile(
+    r'copyright (?:\(c\)|©) ?([0-9]+[0-9, ]+[0-9]+), ?([a-z]+ [a-z]+)'
+  , flags=re.IGNORECASE
+)
+_regex_rfn = re.compile(
+    r'.*(, with Reserved Font Name.+)'
+)
+def parseCopyrightNameYear(copyright):
+    copyrightName = copyrightYear = None
+    match = _regex_copyright.match(copyright)
+    if match:
+        copyrightYear, copyrightName = match.groups()
+
+    RFN = _regex_rfn.match(copyright)
+    if RFN:
+        RFN = RFN.group(1)
+    return copyrightName , copyrightYear, RFN
+
+def getDescription(sourcesDir, familyDir):
+    path = os.path.join(sourcesDir, familyDir, DESCRIPTION_FILE)
+    try:
+        with open(path, 'r') as f:
+            data = f.read()
+    except e:
+        raise e
+        return None
+
+    if data.startswith('<p>'):
+        data = data[3:]
+    if data.endswith('</p>'):
+        data = data[:-4]
+    return data
+
+_regex_mail_raw = r'[\w\.\-\_]+@[\w\-\_\.]+\.+[A-Za-z]{2,4}';
+_regex_mail = re.compile(_regex_mail_raw)
+# This could be better but seems to be suffcient for our data
+_regex_url_raw = r'(?:http[s]?://|(?:[a-zA-Z][a-zA-Z0-9]+)[\.])(?:[a-zA-Z0-9/\-_\.~]{2,})'
+# Match emails and later remove all matches that contain an @
+# this is much easier than trying not to match emails
+# especially because we allow very lax url schemes here, like: "mydomain.com"
+_regex_url = re.compile('(?:{0})|(?:{1})'.format(_regex_mail_raw, _regex_url_raw))
 def getMetaData(sourcesDir, familyDir):
+    """ Try to extract useful data from METADATA.json """
     meta = readMetaData(sourcesDir, familyDir)
-    if meta is None:
-        return ['', '', '', '']
     copyrights = set()
     urls = set()
     emails = set()
-
-    regex_mail_raw = r'[\w\.\-\_]+@[\w\-\_\.]+\.+[A-Za-z]{2,4}';
-    regex_mail = re.compile(regex_mail_raw)
-    # This could be better but seems to be suffcient for our data
-    regex_url_raw = r'(?:http[s]?://|(?:[a-zA-Z][a-zA-Z0-9]+)[\.])(?:[a-zA-Z0-9/\-_\.~]{2,})'
-    # Match emails and later remove all matches that contain an @
-    # this is much easier than trying not to match emails
-    # especially because we allow very lax url schemes here, like: "mydomain.com"
-    regex_url = re.compile('(?:{0})|(?:{1})'.format(regex_mail_raw, regex_url_raw))
 
     fonts = meta.get('fonts', [])
     for font in fonts:
         copyright = font.get('copyright', '')
         copyrights.add(copyright)
-        urls.update(url for url in re.findall(regex_url, copyright) if '@' not in url)
-        emails.update(re.findall(regex_mail, copyright))
+        urls.update(url for url in re.findall(_regex_url, copyright) if '@' not in url)
+        emails.update(re.findall(_regex_mail, copyright))
 
     urls = urls - not_urls
 
+    if copyrights:
+        # is it sufficient to take just the first copyright?
+        # our target consumes only one!
+        copyright = list(copyrights)[0]
+        copyrightName, copyrightYear, RFN = parseCopyrightNameYear(copyright)
+        emails_list = sorted(emails, lambda mail: copyright.index(mail))
+        copyrightEmail = emails_list[0] if len(emails_list) else ''
+
+    description = getDescription(sourcesDir, familyDir)
+
+    return {
+        'name': meta.get('name', None)
+      , 'number_fonts': len(fonts)
+      , 'designer': meta.get('designer', None)
+      , 'emails': emails
+      , 'urls': urls
+      , 'copyrights': copyrights
+      , 'dateAdded': meta.get('dateAdded', None)
+
+      , 'copyrightName': copyrightName
+      , 'copyrightYear': copyrightYear
+      , 'copyrightEmail': emails_list[0] if len(emails_list) else ''
+      , 'RFN': RFN
+      , 'description': description
+    }
+
+
+def getMetaDataLine(sourcesDir, familyDir):
+    try:
+        meta = getMetaData
+    except NoMetaDataError:
+        return ['', '', '', '', '', '', '',]
+    metaData = getMetaData(sourcesDir, familyDir)
     return [
-        meta.get('name', '')
+        metaData['name'] or ''
       , len(fonts)
-      , meta.get('designer', '')
+      , metaData['designer'] or ''
       , iterToCell(emails)
       , iterToCell(urls)
       , iterToCell(copyrights)
-      , meta.get('dateAdded', '')
+      , metaData['dateAdded'] or ''
     ]
 
 def makeFamilyLine(sourcesDir, familyDir):
@@ -143,13 +211,13 @@ def makeFamilyLine(sourcesDir, familyDir):
       , iterToCell(sourceFiles) # source files
     ]
 
-    line += getMetaData(sourcesDir, familyDir)
+    line += getMetaDataLine(sourcesDir, familyDir)
     return line
 
 
 
-def main():
-    sourcesDir = sys.argv[1];
+def main(args):
+    sourcesDir = args[0];
     formatCell = lambda s: '"{0}"'.format('{0}'.format(s).replace('"', '""'));
     joinCells = ','.join;
     labels = [
@@ -173,4 +241,4 @@ def main():
         print(joinCells(map(formatCell, line)))
 
 if __name__ == '__main__':
-    main();
+    main(sys.argv[1:]);
