@@ -1,5 +1,5 @@
 # {projectName} Font Project
-by {name}
+by {designerName}
 
 {description}
 
