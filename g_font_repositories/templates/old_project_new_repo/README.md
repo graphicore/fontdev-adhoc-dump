@@ -1,7 +1,7 @@
-# {projectName} Font Project
-by {designerName}
+# ${projectName} Font Project
+by ${designerName}
 
-{description}
+${description}
 
 This project is a fork from the old Google font repository.
 
