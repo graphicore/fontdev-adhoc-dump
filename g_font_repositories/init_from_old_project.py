@@ -52,8 +52,8 @@ def copyTemplate(log, templateKey, targetDir):
         log.info('Copy template {0}'.format(templateDir))
         shutil.copytree(templateDir, targetDir)
     except Exception as e:
-        print('The target directory "{0}" can\'t be created with ' \
-                    + 'message: {1}'.format(targetDir, e), file=sys.stderr)
+        log.error('The target directory "{0}" can\'t be created with ' \
+                    + 'message: {1}'.format(targetDir, e))
         sys.exit(1)
 
 META_DATA_META = (
