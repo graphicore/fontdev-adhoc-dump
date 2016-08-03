@@ -98,7 +98,7 @@ _regex_copyright = re.compile(
   , flags=re.IGNORECASE
 )
 _regex_rfn = re.compile(
-    r'.*(, with Reserved Font Name.+)'
+    r'.*(Reserved Font Name.+)'
 )
 def parseCopyrightNameYear(copyright):
     copyrightName = copyrightYear = None
@@ -108,7 +108,11 @@ def parseCopyrightNameYear(copyright):
 
     RFN = _regex_rfn.match(copyright)
     if RFN:
-        RFN = RFN.group(1)
+        # also add a proper separator to it, some Copyright string omit the comma.
+        print ('RFN', *RFN.groups())
+        RFN = ', with {0}'.format(RFN.group(1))
+        if RFN.endswith('.'):
+            RFN = RFN[:-1]
     return copyrightName , copyrightYear, RFN
 
 def getDescription(sourcesDir, familyDir):
