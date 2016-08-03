@@ -128,11 +128,12 @@ def user_input_wrapper(f):
             except EOFError:
                 leave = None
                 try:
-                    leave = raw_input('\nDo you really want to exit ([y]/n)? ').lower().strip()
+                    leave = raw_input('\nDo you really want to exit ([y]/n)? ')
                 except:
-                    if not leave or leave in ('y', 'yes'):
-                        print ('Bye!')
-                        sys.exit(0)
+                    pass
+                if leave is None or leave.lower().strip() in ('', 'y', 'yes'):
+                    print ('Bye!')
+                    sys.exit(0)
     return wrapper;
 
 @user_input_wrapper
