@@ -77,7 +77,7 @@ def readMetaData(sourcesDir, familyDir):
         with open(path, 'r') as f:
             return json.load(f)
     except IOError as e:
-        raise NoMetaDataError('No meta data with error:' + e)
+        raise NoMetaDataError('No meta data with error: {0}'.format(e))
 
 def iterToCell(data, separator='\n'):
     return separator.join(sorted(list(data)))
