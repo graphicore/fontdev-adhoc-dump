@@ -123,11 +123,6 @@ def getDescription(sourcesDir, familyDir):
     except e:
         raise e
         return None
-
-    if data.startswith('<p>'):
-        data = data[3:]
-    if data.endswith('</p>'):
-        data = data[:-4]
     return data
 
 _regex_mail_raw = r'[\w\.\-\_]+@[\w\-\_\.]+\.+[A-Za-z]{2,4}';
