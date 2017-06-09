@@ -211,7 +211,7 @@ def checkMetaData(log, metaData, force, allYes):
     return metaData;
 
 METADATA_RECEIVERS = (
-    'AUTHOR.txt'
+    'AUTHORS.txt'
   , 'OFL.txt'
   , 'README.md'
   , 'documentation/DESCRIPTION.en_us.html'
