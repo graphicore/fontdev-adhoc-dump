@@ -155,7 +155,7 @@ def getMetaData(sourcesDir, familyDir):
         copyright = list(copyrights)[0]
         copyrightName, copyrightYear, RFN = parseCopyrightNameYear(copyright)
         emails_list = sorted(emails, lambda mail: copyright.index(mail))
-        copyrightEmail = emails_list[0] if len(emails_list) else ''
+        copyrightGitRepoUrl = emails_list[0] if len(emails_list) else ''
 
     description = getDescription(sourcesDir, familyDir)
 
@@ -170,7 +170,7 @@ def getMetaData(sourcesDir, familyDir):
 
       , 'copyrightName': copyrightName
       , 'copyrightYear': copyrightYear
-      , 'copyrightEmail': emails_list[0] if len(emails_list) else ''
+      , 'copyrightGitRepoUrl': emails_list[0] if len(emails_list) else ''
       , 'RFN': RFN
       , 'description': description
     }
