@@ -60,9 +60,9 @@ META_DATA_META = (
         ('projectName', 'name', True)
       , ('designerName', 'designer', True)
       , ('authorName', 'copyrightName', True)
-      , ('authorEmail', 'copyrightEmail', True)
+      , ('authorEmail', 'copyrightGitRepoUrl', True)
       , ('copyrightName', 'copyrightName', True)
-      , ('copyrightEmail', 'copyrightEmail', True)
+      , ('copyrightGitRepoUrl', 'copyrightGitRepoUrl', True)
       , ('copyrightYear', 'copyrightYear', True)
       , ('RFN', 'RFN', False)
       , ('description', 'description', True)
@@ -211,7 +211,7 @@ def checkMetaData(log, metaData, force, allYes):
     return metaData;
 
 METADATA_RECEIVERS = (
-    'AUTHOR.txt'
+    'AUTHORS.txt'
   , 'OFL.txt'
   , 'README.md'
   , 'documentation/DESCRIPTION.en_us.html'

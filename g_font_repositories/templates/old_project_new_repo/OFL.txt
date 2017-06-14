@@ -1,4 +1,4 @@
-Copyright (c) ${copyrightYear}, The ${projectName} Project Authors (${copyrightEmail})${RFN}
+Copyright ${copyrightYear} The ${projectName} Project Authors (${copyrightGitRepoUrl})${RFN}
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
 This license is copied below, and is also available with a FAQ at:
